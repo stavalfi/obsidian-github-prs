@@ -1,11 +1,11 @@
 {
-	"id": "github-extended-plugin",
-	"name": "Github Extended Plugin",
+	"id": "obsidian-github-prs",
+	"name": "Github PRs",
 	"version": "1.0.0",
 	"minAppVersion": "1.4.16",
 	"description": "Show PRs as table in Obsidian",
-	"author": "Obsidian",
-	"authorUrl": "https://github.com/stavalfi/github-extended",
+	"author": "stavalfi",
+	"authorUrl": "https://github.com/stavalfi/obsidian-github-prs",
 	"fundingUrl": "",
 	"isDesktopOnly": false
 }
