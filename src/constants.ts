@@ -1,9 +1,11 @@
 export enum Properties {
 	ORG = "org",
-	REPO = "repo",
+	REPOS = "repos",
 	COLUMNS = "columns",
 	AUTHOR = "author",
 	STATE = "state",
+	SORT = "sort",
+	order = "order",
 }
 
 export enum State {

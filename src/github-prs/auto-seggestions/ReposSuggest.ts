@@ -13,7 +13,9 @@ import { Column, Properties, State } from "../../constants";
 import { SuggestionEntry } from "../../types";
 import { GetPropertyValue } from "../parser";
 
-export class RepoSuggest extends EditorSuggest<SuggestionEntry> {
+export class ReposSuggest extends EditorSuggest<SuggestionEntry> {
+	private cachedSelectedRepos: string[] = [];
+
 	constructor(app: App, private readonly octokit: Octokit) {
 		super(app);
 	}
@@ -24,14 +26,14 @@ export class RepoSuggest extends EditorSuggest<SuggestionEntry> {
 		file: TFile,
 	): EditorSuggestTriggerInfo | null {
 		const cursorLine = editor.getLine(cursor.line);
-		if (!cursorLine.trim().startsWith(`${Properties.REPO}:`)) {
+		if (!cursorLine.trim().startsWith(`${Properties.REPOS}:`)) {
 			return null;
 		}
 		if (
 			!cursorLine
 				.substring(0, cursor.ch)
 				.trim()
-				.startsWith(`${Properties.REPO}:`)
+				.startsWith(`${Properties.REPOS}:`)
 		) {
 			return null;
 		}
@@ -51,6 +53,14 @@ export class RepoSuggest extends EditorSuggest<SuggestionEntry> {
 		const strBeforeCursor = cursorLine.substring(0, cursor.ch);
 		const strAfterColumnsKey = strBeforeCursor.split(":").slice(1).join(":");
 		const lastColumn = strAfterColumnsKey.split(",").pop() ?? "";
+
+		this.cachedSelectedRepos = GetPropertyValue({
+			errors: [],
+			property: Properties.REPOS,
+			source: cursorLine,
+			validOrgs: [],
+			validRepos: [],
+		});
 
 		return {
 			start: { line: cursor.line, ch: cursor.ch - lastColumn.length },
@@ -74,7 +84,10 @@ export class RepoSuggest extends EditorSuggest<SuggestionEntry> {
 		const query = context.query.trim().toUpperCase();
 		for (const repo of allRepos) {
 			if (suggestions.length >= this.limit) break;
-			if (repo.toLowerCase().trim().startsWith(query.toLowerCase().trim())) {
+			if (
+				!this.cachedSelectedRepos.includes(repo) &&
+				repo.toLowerCase().trim().startsWith(query.toLowerCase().trim())
+			) {
 				suggestions.push({
 					name: repo,
 				});
@@ -90,7 +103,7 @@ export class RepoSuggest extends EditorSuggest<SuggestionEntry> {
 	): void {
 		if (!this.context) return;
 
-		const selectedColumn = ` ${value.name}`;
+		const selectedColumn = ` ${value.name}, `;
 		this.context.editor.replaceRange(
 			selectedColumn,
 			this.context.start,

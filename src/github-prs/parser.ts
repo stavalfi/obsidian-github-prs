@@ -32,11 +32,11 @@ export function GetPropertyValue(options: {
 }): string;
 export function GetPropertyValue(options: {
 	source: string;
-	property: Properties.REPO;
+	property: Properties.REPOS;
 	errors: string[];
 	validOrgs?: string[];
 	validRepos?: string[];
-}): string;
+}): string[];
 export function GetPropertyValue({
 	property,
 	errors,
@@ -103,19 +103,26 @@ export function GetPropertyValue({
 							)}`,
 						);
 					}
-					case Properties.REPO: {
-						if (!validRepos) {
-							return value;
-						}
-						const repo = validRepos.find((repo) => repo === value);
-						if (repo) {
-							return repo;
-						}
-						errors.push(
-							`Repo "${value}" is not valid. valid repos are: ${validRepos.join(
-								", ",
-							)}`,
+					case Properties.REPOS: {
+						const repos = _.uniq(
+							value
+								.split(",")
+								.map((c) => c.trim())
+								.filter(Boolean)
+								.flatMap((c) => {
+									if (!validRepos) {
+										return c;
+									}
+									const r = Object.values(validRepos).find((c1) => c1 === c);
+									if (r) {
+										return r;
+									} else {
+										errors.push(`Repo "${c}" is not valid`);
+										return [];
+									}
+								}),
 						);
+						return repos;
 					}
 					case Properties.AUTHOR:
 						return value;

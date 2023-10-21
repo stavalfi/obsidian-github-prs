@@ -24,10 +24,10 @@ export function githubPrsCodeBlockProcessor(
 			errors,
 			property: Properties.ORG,
 		});
-		const repo = GetPropertyValue({
+		const repos = GetPropertyValue({
 			source,
 			errors,
-			property: Properties.REPO,
+			property: Properties.REPOS,
 		});
 		const columns = GetPropertyValue({
 			source,
@@ -39,7 +39,7 @@ export function githubPrsCodeBlockProcessor(
 			errors,
 			property: Properties.STATE,
 		});
-		if (!author || !org || !repo || !columns || !state || errors.length > 0) {
+		if (!author || !org || !repos || !columns || !state || errors.length > 0) {
 			const tbody = el.createEl("table").createEl("tbody");
 			tbody.createEl("tr").createEl("td", { text: "Errors" });
 			for (const error of errors) {
@@ -51,27 +51,48 @@ export function githubPrsCodeBlockProcessor(
 			author,
 			columns,
 			org,
-			repo,
+			repos: repos,
 			state,
 		};
 
-		const prs = await octokit.rest.pulls
-			.list({
-				owner: githubPrsOptions.org,
-				repo: githubPrsOptions.repo,
-				state: githubPrsOptions.state,
-				head: githubPrsOptions.author,
-			})
-			.then((r) =>
-				r.data.filter((pr) => pr.user?.login === githubPrsOptions.author),
-			);
+		const prs = await Promise.all(
+			githubPrsOptions.repos.map((repo) =>
+				octokit.rest.pulls
+					.list({
+						owner: githubPrsOptions.org,
+						repo: repo,
+						state: githubPrsOptions.state,
+						head: githubPrsOptions.author,
+					})
+					.then((r) =>
+						r.data.filter((pr) => pr.user?.login === githubPrsOptions.author),
+					),
+			),
+		).then((r) => r.flat());
 
 		const table = el.createEl("table");
+
+		const bottom = el.createEl("div");
+		bottom.setCssStyles({
+			fontSize: "10px",
+			display: "flex",
+			justifyContent: "space-between",
+		});
+		bottom.createEl("span", { text: `Total results: ${prs.length}` });
+		bottom.createEl("span", {
+			text: `Last update: ${new Date().toLocaleString()}`,
+		});
+
+		table.setCssStyles({ fontSize: "12px" });
 		const body = table.createEl("tbody");
 
 		const header = body.createEl("tr");
 		for (const column of githubPrsOptions.columns) {
-			header.createEl("th", { text: column });
+			header.createEl("th", { text: column }).setCssStyles({
+				fontSize: "14px",
+				whiteSpace: "nowrap",
+				textAlign: "center",
+			});
 		}
 
 		await Promise.all(
@@ -80,7 +101,11 @@ export function githubPrsCodeBlockProcessor(
 				for (const column of githubPrsOptions.columns) {
 					switch (column) {
 						case Column.TITLE: {
-							row.createEl("td", { text: pr.title });
+							row.createEl("td", { text: pr.title }).setCssStyles({
+								fontSize: "10px",
+								textAlign: "start",
+								verticalAlign: "middle",
+							});
 							break;
 						}
 						case Column.BRANCH: {
@@ -89,7 +114,9 @@ export function githubPrsCodeBlockProcessor(
 								.createEl("a", { href: pr.html_url }, (a) => {
 									a.innerText = pr.head.ref;
 								})
-								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
+								.setCssStyles({
+									textAlign: "start",
+								});
 							break;
 						}
 						case Column.CREATED: {
@@ -106,13 +133,15 @@ export function githubPrsCodeBlockProcessor(
 										maxDecimalPoints: 0,
 									})} ago`,
 								})
-								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
+								.setCssStyles({
+									textAlign: "start",
+								});
 							break;
 						}
 						case Column.LAST_COMMIT: {
 							const { data: commit } = await octokit.rest.repos.getCommit({
-								owner: "papayagaming",
-								repo: "papaya-mono",
+								owner: pr.base.repo.owner.login,
+								repo: pr.base.repo.name,
 								ref: pr.head.sha,
 							});
 							const lastCommitBeforeMs =
@@ -130,7 +159,9 @@ export function githubPrsCodeBlockProcessor(
 										maxDecimalPoints: 0,
 									})} ago`;
 								})
-								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
+								.setCssStyles({
+									textAlign: "start",
+								});
 							break;
 						}
 						case Column.REPOSITORY: {
@@ -138,14 +169,13 @@ export function githubPrsCodeBlockProcessor(
 								.createEl("td")
 								.createEl("a", { href: pr.base.repo.html_url }, (a) => {
 									a.innerText = pr.base.repo.name;
-								})
-								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
+								});
 							break;
 						}
 						case Column.STATUS: {
-							row
-								.createEl("td", { text: pr.state })
-								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
+							row.createEl("td", { text: pr.state }).setCssStyles({
+								textAlign: "center",
+							});
 							break;
 						}
 					}

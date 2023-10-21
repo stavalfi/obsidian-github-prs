@@ -6,7 +6,7 @@ export interface SuggestionEntry {
 
 export type GithubPrsOptions = {
 	org: string;
-	repo: string;
+	repos: string[];
 	author: string;
 	columns: Column[];
 	state: State;

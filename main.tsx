@@ -23,7 +23,7 @@ import { Column, Properties } from "./src/constants";
 import { ColumnsSuggest } from "./src/github-prs/auto-seggestions/ColumnsSuggest";
 import { OrgSuggest } from "./src/github-prs/auto-seggestions/OrgSuggest";
 import { PropertiesSuggest } from "./src/github-prs/auto-seggestions/PropertiesSuggest";
-import { RepoSuggest } from "./src/github-prs/auto-seggestions/RepoSuggest";
+import { ReposSuggest } from "./src/github-prs/auto-seggestions/ReposSuggest";
 import { StateSuggest } from "./src/github-prs/auto-seggestions/StateSuggest";
 import { githubPrsCodeBlockProcessor } from "./src/github-prs/code-block-processor";
 import { GetPropertyValue } from "./src/github-prs/parser";
@@ -73,7 +73,7 @@ export default class GithubExtendedPlugin extends Plugin {
 			this.registerEditorSuggest(new ColumnsSuggest(this.app));
 			this.registerEditorSuggest(new StateSuggest(this.app));
 			this.registerEditorSuggest(new OrgSuggest(this.app, this.octokit));
-			this.registerEditorSuggest(new RepoSuggest(this.app, this.octokit));
+			this.registerEditorSuggest(new ReposSuggest(this.app, this.octokit));
 		});
 
 		this.registerMarkdownCodeBlockProcessor(
