@@ -1,11 +1,11 @@
 {
-	"id": "obsidian-github-prs",
+	"id": "github-prs",
 	"name": "Github PRs",
 	"version": "1.0.0",
 	"minAppVersion": "1.4.16",
 	"description": "Show PRs as table in Obsidian",
-	"author": "stavalfi",
-	"authorUrl": "https://github.com/stavalfi/obsidian-github-prs",
+	"author": "Stav Alfi",
+	"authorUrl": "https://github.com/stavalfi",
 	"fundingUrl": "",
 	"isDesktopOnly": false
 }

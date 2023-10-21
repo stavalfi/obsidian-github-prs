@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-github-prs",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "The plugin prints PRs in a table in Obsidian",
 	"main": "main.js",
 	"repository": {
 		"url": "https://github.com/stavalfi/obsidian-github-prs"
