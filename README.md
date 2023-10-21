@@ -1,3 +1,25 @@
+This Obsidian plugin is experimental and in alpha.
+
+It allowed you to search for PRs:
+
+![](https://i.ibb.co/T1PZddH/image.png)
+
+Create a code section with: `github-prs`:
+```github-prs
+org: your organization
+repos: repository-name,
+state: open/close
+columns: Branch, Title, Status, Created, Last Commit, Repository,
+author: the PR author
+```
+
+The query has full autocompletion so you won't get lost :)
+
+
+----------------------
+----------------------
+----------------------
+
 # Obsidian Sample Plugin
 
 This is a sample plugin for Obsidian (https://obsidian.md).

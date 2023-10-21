@@ -2,7 +2,7 @@
 	"id": "github-extended-plugin",
 	"name": "Github Extended Plugin",
 	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
+	"minAppVersion": "1.4.16",
 	"description": "Show PRs as table in Obsidian",
 	"author": "Obsidian",
 	"authorUrl": "https://github.com/stavalfi/github-extended",

@@ -4,6 +4,7 @@
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
+		"github:relase": "yarn build && gh release create 1.0.0 main.js manifest.json styles.css",
 		"lint-format": "biome check --apply-unsafe --error-on-warnings",
 		"lint-format:all": "npm run lint-format .",
 		"dev": "node esbuild.config.mjs",
