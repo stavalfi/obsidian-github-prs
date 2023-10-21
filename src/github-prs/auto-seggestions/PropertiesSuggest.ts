@@ -19,7 +19,6 @@ export class PropertiesSuggest extends EditorSuggest<SuggestionEntry> {
 		file: TFile,
 	): EditorSuggestTriggerInfo | null {
 		const cursorLine = editor.getLine(cursor.line);
-		// check line contains prefix "columns:"
 		if (cursorLine.includes(":")) {
 			return null;
 		}
@@ -32,7 +31,12 @@ export class PropertiesSuggest extends EditorSuggest<SuggestionEntry> {
 				isPluginCodeSection = true;
 				break;
 			}
+			if (line === "```") {
+				isPluginCodeSection = false;
+				break;
+			}
 		}
+
 		if (!isPluginCodeSection) {
 			return null;
 		}
