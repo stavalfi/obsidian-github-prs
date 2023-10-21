@@ -4,7 +4,8 @@ It allowed you to search for PRs:
 
 ![](https://i.ibb.co/T1PZddH/image.png)
 
-Create a code section with: `github-prs`:
+1. get a token from github. Update the settings.
+2. Create a code section with: `github-prs`:
 ```github-prs
 org: your organization
 repos: repository-name,
