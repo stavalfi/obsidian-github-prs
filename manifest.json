@@ -5,7 +5,7 @@
 	"minAppVersion": "0.15.0",
 	"description": "Show PRs as table in Obsidian",
 	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/stavalfi/github-extended",
+	"fundingUrl": "",
 	"isDesktopOnly": false
 }

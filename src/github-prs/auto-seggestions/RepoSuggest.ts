@@ -14,7 +14,7 @@ import { SuggestionEntry } from "../../types";
 import { GetPropertyValue } from "../parser";
 
 export class RepoSuggest extends EditorSuggest<SuggestionEntry> {
-	constructor(app: App, private readonly allRepos: string[]) {
+	constructor(app: App, private readonly octokit: Octokit) {
 		super(app);
 	}
 
@@ -62,9 +62,17 @@ export class RepoSuggest extends EditorSuggest<SuggestionEntry> {
 	async getSuggestions(
 		context: EditorSuggestContext,
 	): Promise<SuggestionEntry[]> {
+		const { data: repos } =
+			await this.octokit.rest.repos.listForAuthenticatedUser({
+				type: "all",
+				per_page: 10_000,
+			});
+
+		const allRepos = repos.map((repo) => repo.name);
+
 		const suggestions: SuggestionEntry[] = [];
 		const query = context.query.trim().toUpperCase();
-		for (const repo of this.allRepos) {
+		for (const repo of allRepos) {
 			if (suggestions.length >= this.limit) break;
 			if (repo.toLowerCase().trim().startsWith(query.toLowerCase().trim())) {
 				suggestions.push({

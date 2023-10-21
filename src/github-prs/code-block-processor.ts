@@ -6,8 +6,6 @@ import { GithubPrsOptions } from "../types";
 import { GetPropertyValue } from "./parser";
 
 export function githubPrsCodeBlockProcessor(
-	validOrgs: string[],
-	validRepos: string[],
 	octokit: Octokit.Octokit,
 ): (
 	source: string,
@@ -15,42 +13,31 @@ export function githubPrsCodeBlockProcessor(
 	ctx: MarkdownPostProcessorContext,
 ) => void | Promise<unknown> {
 	return async (source, el, ctx) => {
-		console.log("stav2");
 		const errors: string[] = [];
 		const author = GetPropertyValue({
 			source,
 			errors,
 			property: Properties.AUTHOR,
-			validOrgs,
-			validRepos,
 		});
 		const org = GetPropertyValue({
 			source,
 			errors,
 			property: Properties.ORG,
-			validOrgs,
-			validRepos,
 		});
 		const repo = GetPropertyValue({
 			source,
 			errors,
 			property: Properties.REPO,
-			validOrgs,
-			validRepos,
 		});
 		const columns = GetPropertyValue({
 			source,
 			errors,
 			property: Properties.COLUMNS,
-			validOrgs,
-			validRepos,
 		});
 		const state = GetPropertyValue({
 			source,
 			errors,
 			property: Properties.STATE,
-			validOrgs,
-			validRepos,
 		});
 		if (!author || !org || !repo || !columns || !state || errors.length > 0) {
 			const tbody = el.createEl("table").createEl("tbody");
@@ -58,7 +45,6 @@ export function githubPrsCodeBlockProcessor(
 			for (const error of errors) {
 				tbody.createEl("tr").createEl("td", { text: `* ${error}` });
 			}
-			console.log("stav-errors:", errors);
 			return;
 		}
 		const githubPrsOptions: GithubPrsOptions = {
@@ -94,21 +80,33 @@ export function githubPrsCodeBlockProcessor(
 				for (const column of githubPrsOptions.columns) {
 					switch (column) {
 						case Column.TITLE: {
-							row.createEl("td").createEl("a", { href: pr.html_url }, (a) => {
-								a.innerText = pr.title;
-							});
+							row.createEl("td", { text: pr.title });
 							break;
 						}
 						case Column.BRANCH: {
-							row.createEl("td").createEl("a", { href: pr.html_url }, (a) => {
-								a.innerText = pr.head.ref;
-							});
+							row
+								.createEl("td")
+								.createEl("a", { href: pr.html_url }, (a) => {
+									a.innerText = pr.head.ref;
+								})
+								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
 							break;
 						}
 						case Column.CREATED: {
-							row.createEl("td").createEl("a", { href: pr.html_url }, (a) => {
-								a.innerText = pr.head.ref;
-							});
+							const createdBeforeMs =
+								Date.now() - new Date(pr.created_at).getTime();
+
+							row
+								.createEl("td", {
+									text: `${humanizeDuration(createdBeforeMs, {
+										units:
+											createdBeforeMs < 1000 * 60 * 60 * 24
+												? ["h", "m"]
+												: ["mo", "d"],
+										maxDecimalPoints: 0,
+									})} ago`,
+								})
+								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
 							break;
 						}
 						case Column.LAST_COMMIT: {
@@ -131,7 +129,8 @@ export function githubPrsCodeBlockProcessor(
 												: ["mo", "d"],
 										maxDecimalPoints: 0,
 									})} ago`;
-								});
+								})
+								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
 							break;
 						}
 						case Column.REPOSITORY: {
@@ -139,15 +138,17 @@ export function githubPrsCodeBlockProcessor(
 								.createEl("td")
 								.createEl("a", { href: pr.base.repo.html_url }, (a) => {
 									a.innerText = pr.base.repo.name;
-								});
+								})
+								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
 							break;
 						}
 						case Column.STATUS: {
-							row.createEl("td", { text: pr.state });
+							row
+								.createEl("td", { text: pr.state })
+								.setCssStyles({ textAlign: "center", verticalAlign: "middle" });
 							break;
 						}
 					}
-					header.createEl("th", { text: column });
 				}
 			}),
 		);

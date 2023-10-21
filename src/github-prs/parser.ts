@@ -6,36 +6,36 @@ export function GetPropertyValue(options: {
 	source: string;
 	property: Properties.COLUMNS;
 	errors: string[];
-	validOrgs: string[];
-	validRepos: string[];
+	validOrgs?: string[];
+	validRepos?: string[];
 }): Column[];
 export function GetPropertyValue(options: {
 	source: string;
 	property: Properties.STATE;
 	errors: string[];
-	validOrgs: string[];
-	validRepos: string[];
+	validOrgs?: string[];
+	validRepos?: string[];
 }): State;
 export function GetPropertyValue(options: {
 	source: string;
 	property: Properties.AUTHOR;
 	errors: string[];
-	validOrgs: string[];
-	validRepos: string[];
+	validOrgs?: string[];
+	validRepos?: string[];
 }): string;
 export function GetPropertyValue(options: {
 	source: string;
 	property: Properties.ORG;
 	errors: string[];
-	validOrgs: string[];
-	validRepos: string[];
+	validOrgs?: string[];
+	validRepos?: string[];
 }): string;
 export function GetPropertyValue(options: {
 	source: string;
 	property: Properties.REPO;
 	errors: string[];
-	validOrgs: string[];
-	validRepos: string[];
+	validOrgs?: string[];
+	validRepos?: string[];
 }): string;
 export function GetPropertyValue({
 	property,
@@ -47,8 +47,8 @@ export function GetPropertyValue({
 	source: string;
 	property: Properties;
 	errors: string[];
-	validOrgs: string[];
-	validRepos: string[];
+	validOrgs?: string[];
+	validRepos?: string[];
 }): GithubPrsOptions[keyof GithubPrsOptions] | undefined {
 	for (const line of source.split("\n")) {
 		const propertyUnparsed = line.split(":")[0]?.trim();
@@ -61,6 +61,7 @@ export function GetPropertyValue({
 							value
 								.split(",")
 								.map((c) => c.trim())
+								.filter(Boolean)
 								.flatMap((c) => {
 									const r = Object.values(Column).find((c1) => c1 === c);
 									if (r) {
@@ -71,17 +72,10 @@ export function GetPropertyValue({
 												Column,
 											).join(", ")}`,
 										);
+										return [];
 									}
-									return Object.values(Column).find((c1) => c1 === c) ?? [];
 								}),
 						);
-						columns.forEach((column) => {
-							if (!column.trim()) {
-								errors.push(
-									`Column "${column}" is not valid. Please check your spelling`,
-								);
-							}
-						});
 						return columns;
 					}
 					case Properties.STATE: {
@@ -96,6 +90,9 @@ export function GetPropertyValue({
 						);
 					}
 					case Properties.ORG: {
+						if (!validOrgs) {
+							return value;
+						}
 						const org = validOrgs.find((org) => org === value);
 						if (org) {
 							return org;
@@ -107,6 +104,9 @@ export function GetPropertyValue({
 						);
 					}
 					case Properties.REPO: {
+						if (!validRepos) {
+							return value;
+						}
 						const repo = validRepos.find((repo) => repo === value);
 						if (repo) {
 							return repo;

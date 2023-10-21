@@ -7,13 +7,14 @@ import {
 	EditorSuggestTriggerInfo,
 	TFile,
 } from "obsidian";
+import { Octokit } from "octokit";
 import { PLUGIN_CODE_SECTION } from "../../../main";
 import { Column, Properties, State } from "../../constants";
 import { SuggestionEntry } from "../../types";
 import { GetPropertyValue } from "../parser";
 
 export class OrgSuggest extends EditorSuggest<SuggestionEntry> {
-	constructor(app: App, private readonly validOrgs: string[]) {
+	constructor(app: App, private readonly octokit: Octokit) {
 		super(app);
 	}
 
@@ -58,12 +59,16 @@ export class OrgSuggest extends EditorSuggest<SuggestionEntry> {
 		};
 	}
 
-	getSuggestions(
+	async getSuggestions(
 		context: EditorSuggestContext,
-	): SuggestionEntry[] | Promise<SuggestionEntry[]> {
+	): Promise<SuggestionEntry[]> {
+		const { data: orgs } =
+			await this.octokit.rest.orgs.listForAuthenticatedUser();
+		const allOrgs = orgs.map((org) => org.url.split("orgs/")[1] ?? org.url);
+
 		const suggestions: SuggestionEntry[] = [];
 		const query = context.query.trim().toUpperCase();
-		for (const org of this.validOrgs) {
+		for (const org of allOrgs) {
 			if (suggestions.length >= this.limit) break;
 			if (org.toLowerCase().trim().startsWith(query.toLowerCase().trim())) {
 				suggestions.push({
