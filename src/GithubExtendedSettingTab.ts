@@ -1,8 +1,8 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import GithubExtendedPlugin from "../main";
+import GithubPrsPlugin from "../main";
 
 export class GithubExtendedSettingTab extends PluginSettingTab {
-	constructor(app: App, private readonly plugin: GithubExtendedPlugin) {
+	constructor(app: App, private readonly plugin: GithubPrsPlugin) {
 		super(app, plugin);
 	}
 

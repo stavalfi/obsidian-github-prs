@@ -1,8 +1,33 @@
-/*
+.github-prs {
+    width: fit-content;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.github-prs-table{
+    font-size: 12px;
+}
 
-If your plugin does not need CSS, delete this file.
+.github-prs-bottom {
+    margin-top: 5px;
+    font-size: 10px;
+    display: flex;
+    justify-content: space-between;
+}
 
-*/
+.github-prs-table th {
+    font-size: 14px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.github-prs-table tr {
+    text-align: start;
+}
+
+.github-prs-table tr .title {
+    font-size: 10px;
+    vertical-align: middle;
+}
+
+.github-prs-table tr .pr-status {
+    text-align: center;
+}

@@ -1,61 +1,26 @@
-import humanizeDuration from "humanize-duration";
 import _ from "lodash";
-import {
-	App,
-	Editor,
-	EditorPosition,
-	EditorSuggest,
-	EditorSuggestContext,
-	EditorSuggestTriggerInfo,
-	MarkdownPostProcessorContext,
-	MarkdownView,
-	Modal,
-	Notice,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-	TFile,
-} from "obsidian";
+import { Plugin } from "obsidian";
 import * as Octokit from "octokit";
-import { createRoot } from "react-dom/client";
 import { GithubExtendedSettingTab } from "./src/GithubExtendedSettingTab";
-import { Column, Properties } from "./src/constants";
-import { ColumnsSuggest } from "./src/github-prs/auto-seggestions/ColumnsSuggest";
-import { OrgSuggest } from "./src/github-prs/auto-seggestions/OrgSuggest";
-import { PropertiesSuggest } from "./src/github-prs/auto-seggestions/PropertiesSuggest";
-import { ReposSuggest } from "./src/github-prs/auto-seggestions/ReposSuggest";
-import { StateSuggest } from "./src/github-prs/auto-seggestions/StateSuggest";
+import { ColumnsSuggest } from "./src/github-prs/auto-suggestions/ColumnsSuggest";
+import { OrgSuggest } from "./src/github-prs/auto-suggestions/OrgSuggest";
+import { PropertiesSuggest } from "./src/github-prs/auto-suggestions/PropertiesSuggest";
+import { ReposSuggest } from "./src/github-prs/auto-suggestions/ReposSuggest";
+import { StateSuggest } from "./src/github-prs/auto-suggestions/StateSuggest";
 import { githubPrsCodeBlockProcessor } from "./src/github-prs/code-block-processor";
-import { GetPropertyValue } from "./src/github-prs/parser";
-import { GithubPrsOptions } from "./src/types";
 
 export const PLUGIN_CODE_SECTION = "github-prs";
 
-// // Clear the existing HTML content
-// document.body.innerHTML = '<div id="app"></div>';
-
-// // Render your React component instead
-// const root = createRoot(document.getElementById('app'));
-// root.render(<h1>Hello, world</h1>);
-
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
+interface Settings {
 	githubToken: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: Settings = {
 	githubToken: "",
 };
 
-const ALL_EMOJIS: Record<string, string> = {
-	":+22:": "👍",
-	":sunglasses:": "😎",
-	":smile:": "😄",
-};
-
-export default class GithubExtendedPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class GithubPrsPlugin extends Plugin {
+	settings: Settings;
 
 	private octokit: Octokit.Octokit;
 

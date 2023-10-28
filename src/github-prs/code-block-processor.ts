@@ -70,29 +70,21 @@ export function githubPrsCodeBlockProcessor(
 			),
 		).then((r) => r.flat());
 
-		const table = el.createEl("table");
+		el.classList.add("github-prs");
 
-		const bottom = el.createEl("div");
-		bottom.setCssStyles({
-			fontSize: "10px",
-			display: "flex",
-			justifyContent: "space-between",
-		});
+		const table = el.createEl("table", { cls: "github-prs-table" });
+
+		const bottom = el.createEl("div", { cls: "github-prs-bottom" });
 		bottom.createEl("span", { text: `Total results: ${prs.length}` });
 		bottom.createEl("span", {
 			text: `Last update: ${new Date().toLocaleString()}`,
 		});
 
-		table.setCssStyles({ fontSize: "12px" });
 		const body = table.createEl("tbody");
 
 		const header = body.createEl("tr");
 		for (const column of githubPrsOptions.columns) {
-			header.createEl("th", { text: column }).setCssStyles({
-				fontSize: "14px",
-				whiteSpace: "nowrap",
-				textAlign: "center",
-			});
+			header.createEl("th", { text: column });
 		}
 
 		await Promise.all(
@@ -101,41 +93,30 @@ export function githubPrsCodeBlockProcessor(
 				for (const column of githubPrsOptions.columns) {
 					switch (column) {
 						case Column.TITLE: {
-							row.createEl("td", { text: pr.title }).setCssStyles({
-								fontSize: "10px",
-								textAlign: "start",
-								verticalAlign: "middle",
+							row.createEl("td", {
+								text: pr.title,
 							});
 							break;
 						}
 						case Column.BRANCH: {
-							row
-								.createEl("td")
-								.createEl("a", { href: pr.html_url }, (a) => {
-									a.innerText = pr.head.ref;
-								})
-								.setCssStyles({
-									textAlign: "start",
-								});
+							row.createEl("td").createEl("a", { href: pr.html_url }, (a) => {
+								a.innerText = pr.head.ref;
+							});
 							break;
 						}
 						case Column.CREATED: {
 							const createdBeforeMs =
 								Date.now() - new Date(pr.created_at).getTime();
 
-							row
-								.createEl("td", {
-									text: `${humanizeDuration(createdBeforeMs, {
-										units:
-											createdBeforeMs < 1000 * 60 * 60 * 24
-												? ["h", "m"]
-												: ["mo", "d"],
-										maxDecimalPoints: 0,
-									})} ago`,
-								})
-								.setCssStyles({
-									textAlign: "start",
-								});
+							row.createEl("td", {
+								text: `${humanizeDuration(createdBeforeMs, {
+									units:
+										createdBeforeMs < 1000 * 60 * 60 * 24
+											? ["h", "m"]
+											: ["mo", "d"],
+									maxDecimalPoints: 0,
+								})} ago`,
+							});
 							break;
 						}
 						case Column.LAST_COMMIT: {
@@ -158,9 +139,6 @@ export function githubPrsCodeBlockProcessor(
 												: ["mo", "d"],
 										maxDecimalPoints: 0,
 									})} ago`;
-								})
-								.setCssStyles({
-									textAlign: "start",
 								});
 							break;
 						}
@@ -173,9 +151,7 @@ export function githubPrsCodeBlockProcessor(
 							break;
 						}
 						case Column.STATUS: {
-							row.createEl("td", { text: pr.state }).setCssStyles({
-								textAlign: "center",
-							});
+							row.createEl("td", { text: pr.state, cls: "pr-status" });
 							break;
 						}
 					}
