@@ -14,10 +14,10 @@ export function githubPrsCodeBlockProcessor(
 ) => void | Promise<unknown> {
 	return async (source, el, ctx) => {
 		const errors: string[] = [];
-		const author = GetPropertyValue({
+		const authors = GetPropertyValue({
 			source,
 			errors,
-			property: Properties.AUTHOR,
+			property: Properties.AUTHORs,
 		});
 		const org = GetPropertyValue({
 			source,
@@ -39,7 +39,7 @@ export function githubPrsCodeBlockProcessor(
 			errors,
 			property: Properties.STATE,
 		});
-		if (!author || !org || !repos || !columns || !state || errors.length > 0) {
+		if (!authors || !org || !repos || !columns || !state || errors.length > 0) {
 			const tbody = el.createEl("table").createEl("tbody");
 			tbody.createEl("tr").createEl("td", { text: "Errors" });
 			for (const error of errors) {
@@ -48,27 +48,83 @@ export function githubPrsCodeBlockProcessor(
 			return;
 		}
 		const githubPrsOptions: GithubPrsOptions = {
-			author,
+			authors,
 			columns,
 			org,
-			repos: repos,
+			repos,
 			state,
 		};
 
+		const ghRequests = githubPrsOptions.authors.flatMap((author) =>
+			githubPrsOptions.repos.map((repo) => ({
+				owner: githubPrsOptions.org,
+				repo: repo,
+				state: githubPrsOptions.state,
+				author,
+			})),
+		);
+
 		const prs = await Promise.all(
-			githubPrsOptions.repos.map((repo) =>
+			ghRequests.map((body) =>
 				octokit.rest.pulls
 					.list({
-						owner: githubPrsOptions.org,
-						repo: repo,
-						state: githubPrsOptions.state,
-						head: githubPrsOptions.author,
+						owner: body.owner,
+						repo: body.repo,
+						state: body.state,
+						head: body.author,
 					})
 					.then((r) =>
-						r.data.filter((pr) => pr.user?.login === githubPrsOptions.author),
+						Promise.all(
+							r.data
+								.filter((pr) => pr.user?.login === body.author)
+								.map(async (pr) => {
+									const createdBeforeMs =
+										Date.now() - new Date(pr.created_at).getTime();
+									const { data: lastCommit } =
+										await octokit.rest.repos.getCommit({
+											owner: pr.base.repo.owner.login,
+											repo: pr.base.repo.name,
+											ref: pr.head.sha,
+										});
+									const lastCommitBeforeMs =
+										Date.now() -
+										new Date(lastCommit.commit.author?.date ?? 0).getTime();
+									return {
+										pr,
+										extraInfo: {
+											...body,
+											createdBeforeMs,
+											lastCommit,
+											lastCommitBeforeMs,
+										},
+									};
+								}),
+						),
 					),
 			),
 		).then((r) => r.flat());
+
+		prs.sort((a, b) => {
+			const user =
+				!a.pr.user?.login || !b.pr.user?.login
+					? 0
+					: a.pr.user.login.localeCompare(b.pr.user.login);
+			if (user === 0) {
+				const state = a.pr.state.localeCompare(b.pr.state);
+				if (state === 0) {
+					const repo = a.pr.base.repo.name.localeCompare(b.pr.base.repo.name);
+					if (repo === 0) {
+						return (
+							new Date(b.pr.created_at).getTime() -
+							new Date(a.pr.created_at).getTime()
+						);
+					}
+					return repo;
+				}
+				return state;
+			}
+			return user;
+		});
 
 		el.classList.add("github-prs");
 
@@ -88,75 +144,85 @@ export function githubPrsCodeBlockProcessor(
 		}
 
 		await Promise.all(
-			prs.map(async (pr) => {
-				const row = body.createEl("tr");
-				for (const column of githubPrsOptions.columns) {
-					switch (column) {
-						case Column.TITLE: {
-							row.createEl("td", {
-								text: pr.title,
-							});
-							break;
-						}
-						case Column.BRANCH: {
-							row.createEl("td").createEl("a", { href: pr.html_url }, (a) => {
-								a.innerText = pr.head.ref;
-							});
-							break;
-						}
-						case Column.CREATED: {
-							const createdBeforeMs =
-								Date.now() - new Date(pr.created_at).getTime();
-
-							row.createEl("td", {
-								text: `${humanizeDuration(createdBeforeMs, {
-									units:
-										createdBeforeMs < 1000 * 60 * 60 * 24
-											? ["h", "m"]
-											: ["mo", "d"],
-									maxDecimalPoints: 0,
-								})} ago`,
-							});
-							break;
-						}
-						case Column.LAST_COMMIT: {
-							const { data: commit } = await octokit.rest.repos.getCommit({
-								owner: pr.base.repo.owner.login,
-								repo: pr.base.repo.name,
-								ref: pr.head.sha,
-							});
-							const lastCommitBeforeMs =
-								Date.now() -
-								new Date(commit.commit.author?.date ?? 0).getTime();
-
-							row
-								.createEl("td")
-								.createEl("a", { href: commit.html_url }, (a) => {
-									a.innerText = `${humanizeDuration(lastCommitBeforeMs, {
+			prs.map(
+				async ({
+					pr,
+					extraInfo: {
+						author,
+						createdBeforeMs,
+						lastCommit,
+						lastCommitBeforeMs,
+					},
+				}) => {
+					const row = body.createEl("tr");
+					for (const column of githubPrsOptions.columns) {
+						switch (column) {
+							case Column.AUTHOR: {
+								row.createEl("td").createEl(
+									"a",
+									{
+										href: `${pr.head.repo.html_url}/pulls/${author}`,
+									},
+									(a) => {
+										a.text = author;
+									},
+								);
+								break;
+							}
+							case Column.TITLE: {
+								row.createEl("td", {
+									text: pr.title,
+								});
+								break;
+							}
+							case Column.BRANCH: {
+								row.createEl("td").createEl("a", { href: pr.html_url }, (a) => {
+									a.text = pr.head.ref;
+								});
+								break;
+							}
+							case Column.CREATED: {
+								row.createEl("td", {
+									text: `${humanizeDuration(createdBeforeMs, {
 										units:
-											lastCommitBeforeMs < 1000 * 60 * 60 * 24
+											createdBeforeMs < 1000 * 60 * 60 * 24
 												? ["h", "m"]
 												: ["mo", "d"],
 										maxDecimalPoints: 0,
-									})} ago`;
+									})} ago`,
 								});
-							break;
-						}
-						case Column.REPOSITORY: {
-							row
-								.createEl("td")
-								.createEl("a", { href: pr.base.repo.html_url }, (a) => {
-									a.innerText = pr.base.repo.name;
-								});
-							break;
-						}
-						case Column.STATUS: {
-							row.createEl("td", { text: pr.state, cls: "pr-status" });
-							break;
+								break;
+							}
+							case Column.LAST_COMMIT: {
+								row
+									.createEl("td")
+									.createEl("a", { href: lastCommit.html_url }, (a) => {
+										a.text = `${humanizeDuration(lastCommitBeforeMs, {
+											units:
+												lastCommitBeforeMs < 1000 * 60 * 60 * 24
+													? ["h", "m"]
+													: ["mo", "d"],
+											maxDecimalPoints: 0,
+										})} ago`;
+									});
+								break;
+							}
+							case Column.REPOSITORY: {
+								row
+									.createEl("td")
+									.createEl("a", { href: pr.base.repo.html_url }, (a) => {
+										a.text = pr.base.repo.name;
+									});
+								break;
+							}
+							case Column.STATUS: {
+								row.createEl("td", { text: pr.state, cls: "pr-status" });
+								break;
+							}
 						}
 					}
-				}
-			}),
+				},
+			),
 		);
 	};
 }

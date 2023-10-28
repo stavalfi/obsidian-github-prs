@@ -2,7 +2,7 @@ export enum Properties {
 	ORG = "org",
 	REPOS = "repos",
 	COLUMNS = "columns",
-	AUTHOR = "author",
+	AUTHORs = "authors",
 	STATE = "state",
 	SORT = "sort",
 	order = "order",
@@ -20,4 +20,5 @@ export enum Column {
 	STATUS = "Status",
 	CREATED = "Created",
 	LAST_COMMIT = "Last Commit",
+	AUTHOR = "Author",
 }

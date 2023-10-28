@@ -18,11 +18,11 @@ export function GetPropertyValue(options: {
 }): State;
 export function GetPropertyValue(options: {
 	source: string;
-	property: Properties.AUTHOR;
+	property: Properties.AUTHORs;
 	errors: string[];
 	validOrgs?: string[];
 	validRepos?: string[];
-}): string;
+}): string[];
 export function GetPropertyValue(options: {
 	source: string;
 	property: Properties.ORG;
@@ -124,8 +124,11 @@ export function GetPropertyValue({
 						);
 						return repos;
 					}
-					case Properties.AUTHOR:
-						return value;
+					case Properties.AUTHORs:
+						return value
+							.split(",")
+							.map((c) => c.trim())
+							.filter(Boolean);
 				}
 			}
 		}
