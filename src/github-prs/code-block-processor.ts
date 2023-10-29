@@ -185,7 +185,7 @@ export function githubPrsCodeBlockProcessor(
 										new Date(lastCommit.commit.author?.date ?? 0).getTime();
 
 									const relatedIssuesKeys = _.uniq(
-										[pr.body, pr.title].flatMap((text) => {
+										[pr.body, pr.title, pr.head.ref].flatMap((text) => {
 											if (!text) {
 												return [];
 											}
