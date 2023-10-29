@@ -242,7 +242,6 @@ export function githubPrsCodeBlockProcessor(
 		});
 
 		el.classList.add("github-prs");
-		el.classList.add("jira-issue-container");
 
 		const table = el.createEl("table", { cls: "github-prs-table" });
 

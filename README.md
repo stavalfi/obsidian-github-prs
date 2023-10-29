@@ -2,16 +2,16 @@ This Obsidian plugin is experimental and in alpha.
 
 It allowed you to search for PRs:
 
-![](https://i.ibb.co/T1PZddH/image.png)
+![](https://i.ibb.co/9T4vgqk/image.png)
 
 1. get a token from github. Update the settings.
 2. Create a code section with: `github-prs`:
 ```github-prs
 org: your organization
-repos: repository-name,
+repos: repo1,repo2,repo3
+authors: stav,alex,tom
 state: open/close
-columns: Branch, Title, Status, Created, Last Commit, Repository,
-author: the PR author
+columns: Branch, Title, Status, Created, Last Commit, Repository, Author, Jira Issues
 ```
 
 The query has full autocompletion so you won't get lost :)
