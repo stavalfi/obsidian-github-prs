@@ -197,10 +197,13 @@ export function githubPrsCodeBlockProcessor(
 									);
 
 									const relatedJiraIssues = await Promise.all(
-										relatedIssuesKeys.map(
-											(key) =>
-												jiraApi?.findIssue(key) as Promise<JiraIssueResponse>,
+										relatedIssuesKeys.map((key) =>
+											jiraApi
+												? (jiraApi.findIssue(key) as Promise<JiraIssueResponse>)
+												: undefined,
 										),
+									).then((r) =>
+										r.filter((r): r is JiraIssueResponse => Boolean(r)),
 									);
 
 									return {
