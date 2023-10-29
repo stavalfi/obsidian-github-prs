@@ -1,13 +1,13 @@
 {
 	"name": "obsidian-github-prs",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "The plugin prints PRs in a table in Obsidian",
 	"main": "main.js",
 	"repository": {
 		"url": "https://github.com/stavalfi/obsidian-github-prs"
 	},
 	"scripts": {
-		"github:relase": "yarn build && gh release create 1.1.0 main.js manifest.json styles.css",
+		"github:relase": "yarn build && gh release create 1.2.0 main.js manifest.json styles.css",
 		"lint-format": "biome check --apply-unsafe --error-on-warnings",
 		"lint-format:all": "npm run lint-format .",
 		"dev": "node esbuild.config.mjs",

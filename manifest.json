@@ -1,7 +1,7 @@
 {
 	"id": "github-prs",
 	"name": "Github PRs",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"minAppVersion": "1.4.16",
 	"description": "Show PRs as table",
 	"author": "Stav Alfi",
