@@ -12,7 +12,8 @@
 		"lint-format:all": "npm run lint-format .",
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"postinstall": "patch-package"
 	},
 	"keywords": [],
 	"author": "Stav Alfi",
@@ -20,6 +21,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.2.2",
 		"@types/humanize-duration": "^3.27.2",
+		"@types/jira-client": "^7.1.8",
 		"@types/lodash": "^4.14.200",
 		"@types/node": "^16.11.6",
 		"@types/react": "^18.2.29",
@@ -29,13 +31,17 @@
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.17.3",
 		"obsidian": "latest",
+		"patch-package": "^8.0.0",
+		"postinstall-postinstall": "^2.1.0",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
 		"humanize-duration": "^3.30.0",
+		"jira-client": "^8.2.2",
 		"lodash": "^4.17.21",
 		"octokit": "^3.1.1",
+		"punycode": "^2.3.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0"
 	}

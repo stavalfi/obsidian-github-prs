@@ -1,17 +1,112 @@
 import humanizeDuration from "humanize-duration";
-import { MarkdownPostProcessorContext } from "obsidian";
+import JiraApi from "jira-client";
+import _ from "lodash";
+import { App, MarkdownPostProcessorContext } from "obsidian";
 import * as Octokit from "octokit";
 import { Column, Properties } from "../constants";
-import { GithubPrsOptions } from "../types";
+import { GithubPrsOptions, JiraIssueResponse, Settings } from "../types";
 import { GetPropertyValue } from "./parser";
 
+export const JIRA_STATUS_COLOR_MAP: Record<string, string> = {
+	"blue-gray": "is-info",
+	yellow: "is-warning",
+	green: "is-success",
+	red: "is-danger",
+	"medium-gray": "is-dark",
+};
+
 export function githubPrsCodeBlockProcessor(
+	app: App,
+	settings: Settings,
 	octokit: Octokit.Octokit,
+	jiraApi?: JiraApi,
 ): (
 	source: string,
 	el: HTMLElement,
 	ctx: MarkdownPostProcessorContext,
 ) => void | Promise<unknown> {
+	function getTheme(): string {
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const obsidianTheme = (app.vault as any).getConfig("theme");
+		if (obsidianTheme === "obsidian") {
+			return "is-dark";
+		} else if (obsidianTheme === "moonstone") {
+			return "is-light";
+		} else if (obsidianTheme === "system") {
+			if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+				return "is-dark";
+			} else {
+				return "is-light";
+			}
+		}
+		return "is-light";
+	}
+
+	function renderAccountColorBand(
+		title: string,
+		color: string,
+		parent: HTMLDivElement,
+	) {
+		createSpan({
+			cls: `ji-tag ${getTheme()} ji-band`,
+			attr: { style: `background-color: ${color}` },
+			title,
+			parent: parent,
+		});
+	}
+
+	function renderIssue(issue: JiraIssueResponse, parent: HTMLElement) {
+		const span = parent.createEl("span", {
+			cls: "github-prs-jira-issue-badge ji-inline-issue jira-issue-container",
+		});
+		const tagsRow = span.createEl("div", { cls: "ji-tags has-addons" });
+		renderAccountColorBand(
+			issue.fields.summary,
+			issue.fields.status.statusCategory.colorName,
+			tagsRow,
+		);
+		if (issue.fields.issuetype.iconUrl) {
+			createEl("img", {
+				cls: "fit-content",
+				attr: {
+					src: issue.fields.issuetype.iconUrl,
+					alt: issue.fields.issuetype.name,
+				},
+				title: issue.fields.issuetype.name,
+				parent: createSpan({
+					cls: `ji-tag ${getTheme()} ji-sm-tag`,
+					parent: tagsRow,
+				}),
+			});
+		}
+		createEl("a", {
+			cls: `ji-tag is-link ${getTheme()} no-wrap`,
+			href: new URL(
+				`https://${settings.jira.url}/browse/${issue.key}`,
+			).toString(),
+			title: new URL(
+				`https://${settings.jira.url}/browse/${issue.key}`,
+			).toString(),
+			text: issue.key,
+			parent: tagsRow,
+		});
+		createSpan({
+			cls: `ji-tag ${getTheme()} issue-summary`,
+			text: issue.fields.summary,
+			parent: tagsRow,
+		});
+		const statusColor =
+			JIRA_STATUS_COLOR_MAP[issue.fields.status.statusCategory.colorName] ||
+			"is-light";
+		createSpan({
+			cls: `ji-tag no-wrap ${statusColor}`,
+			text: issue.fields.status.name,
+			title: issue.fields.status.description,
+			attr: { "data-status": issue.fields.status.name },
+			parent: tagsRow,
+		});
+	}
+
 	return async (source, el, ctx) => {
 		const errors: string[] = [];
 		const authors = GetPropertyValue({
@@ -63,7 +158,6 @@ export function githubPrsCodeBlockProcessor(
 				author,
 			})),
 		);
-
 		const prs = await Promise.all(
 			ghRequests.map((body) =>
 				octokit.rest.pulls
@@ -89,10 +183,31 @@ export function githubPrsCodeBlockProcessor(
 									const lastCommitBeforeMs =
 										Date.now() -
 										new Date(lastCommit.commit.author?.date ?? 0).getTime();
+
+									const relatedIssuesKeys = _.uniq(
+										[pr.body, pr.title].flatMap((text) => {
+											if (!text) {
+												return [];
+											}
+											const matches = text.match(
+												new RegExp(`${settings.jira.issuePrefix}-\\d+`, "g"),
+											);
+											return matches ?? [];
+										}),
+									);
+
+									const relatedJiraIssues = await Promise.all(
+										relatedIssuesKeys.map(
+											(key) =>
+												jiraApi?.findIssue(key) as Promise<JiraIssueResponse>,
+										),
+									);
+
 									return {
 										pr,
 										extraInfo: {
 											...body,
+											relatedJiraIssues,
 											createdBeforeMs,
 											lastCommit,
 											lastCommitBeforeMs,
@@ -127,6 +242,7 @@ export function githubPrsCodeBlockProcessor(
 		});
 
 		el.classList.add("github-prs");
+		el.classList.add("jira-issue-container");
 
 		const table = el.createEl("table", { cls: "github-prs-table" });
 
@@ -152,6 +268,7 @@ export function githubPrsCodeBlockProcessor(
 						createdBeforeMs,
 						lastCommit,
 						lastCommitBeforeMs,
+						relatedJiraIssues,
 					},
 				}) => {
 					const row = body.createEl("tr");
@@ -173,6 +290,13 @@ export function githubPrsCodeBlockProcessor(
 								row.createEl("td", {
 									text: pr.title,
 								});
+								break;
+							}
+							case Column.JIRA_ISSUES: {
+								const div = row.createEl("td");
+								for (const issue of relatedJiraIssues) {
+									renderIssue(issue, div);
+								}
 								break;
 							}
 							case Column.BRANCH: {

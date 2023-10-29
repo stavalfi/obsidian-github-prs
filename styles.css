@@ -1,9 +1,17 @@
+.github-prs-jira-issue-badge {
+    white-space: nowrap;
+}
+
 .github-prs {
     width: fit-content;
 }
 
 .github-prs-table{
     font-size: 12px;
+}
+
+.github-prs .github-prs-table .jira-issue-link {
+    margin-right: 2px;
 }
 
 .github-prs-bottom {
@@ -20,6 +28,7 @@
 }
 
 .github-prs-table tr {
+    vertical-align: middle;
     text-align: start;
 }
 

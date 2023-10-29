@@ -21,4 +21,5 @@ export enum Column {
 	CREATED = "Created",
 	LAST_COMMIT = "Last Commit",
 	AUTHOR = "Author",
+	JIRA_ISSUES = "Jira Issues",
 }
