@@ -2,8 +2,6 @@ This Obsidian plugin is experimental and in alpha.
 
 It allowed you to search for PRs:
 
-![](https://i.ibb.co/9T4vgqk/image.png)
-
 1. get a token from github. Update the settings.
 2. Create a code section with: `github-prs`:
 ```github-prs
